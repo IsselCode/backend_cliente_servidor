@@ -1,13 +1,20 @@
+"""
+Script manual para comprobar descubrimiento mDNS.
+
+Escucha servicios publicados en la red local y muestra nombre, servidor,
+puerto y direcciones para verificar que el backend se esta anunciando.
+"""
+
 import time
 
 from zeroconf import IPVersion, ServiceBrowser, ServiceStateChange, Zeroconf
 
 
-def escuchar_mdns(service_type: str = "_http._tcp.local.", tiempo_escucha: float = 5.0) -> None:
+def escuchar_mdns(service_type: str = "_http._tcp.local.", tiempo_escucha: float = 10.0) -> None:
     if tiempo_escucha <= 0:
         raise ValueError("tiempo_escucha debe ser mayor a 0")
 
-    zeroconf = Zeroconf(ip_version=IPVersion.All)
+    zeroconf = Zeroconf(ip_version=IPVersion.V4Only)
 
     def on_service_state_change(
         zeroconf: Zeroconf,

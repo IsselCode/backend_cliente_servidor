@@ -1,3 +1,10 @@
+"""
+Contenedor de dependencias compartidas de la aplicacion.
+
+Reune configuracion y servicios ya creados para acceder a ellos desde FastAPI
+sin recrearlos en cada modulo.
+"""
+
 from dataclasses import dataclass
 
 from core.app.settings import AppSettings

@@ -1,3 +1,10 @@
+"""
+Construccion principal de la aplicacion FastAPI.
+
+Carga la configuracion, crea los servicios base y guarda el estado compartido
+que otros modulos usan durante el ciclo de vida del backend.
+"""
+
 from fastapi import FastAPI
 
 from core.app.lifecycle import app_lifespan

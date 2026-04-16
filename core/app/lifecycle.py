@@ -1,3 +1,10 @@
+"""
+Ciclo de vida de la aplicacion FastAPI.
+
+Define que debe ocurrir cuando el backend inicia y cuando se apaga; por ahora
+registra el servicio mDNS al arrancar y lo libera al finalizar.
+"""
+
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
