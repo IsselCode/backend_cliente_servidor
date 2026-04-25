@@ -27,7 +27,7 @@ class AppSettings:
 
     @classmethod
     def from_env(cls) -> "AppSettings":
-        base_path = Path(__file__).resolve().parent.parents[2]
+        base_path = Path(__file__).resolve().parents[2]
         default_database_path = base_path / "app.db"
 
         return cls(
