@@ -14,9 +14,11 @@ from core.database.bootstrap import bootstrap_admin_user
 from core.database.database import Database
 from core.database.repositories.refresh_token_repository import RefreshTokenRepository
 from core.database.repositories.user_repository import UserRepository
+from core.errors.handlers import register_exception_handlers
 from core.services.mdns_service import MDNSService
 from core.services.password_service import PasswordService
 from core.utils.security import TokenManager
+from src.routers import register_routers
 
 
 def create_app() -> FastAPI:
@@ -56,5 +58,10 @@ def create_app() -> FastAPI:
         password_service = password_service,
         token_manager = token_manager
     )
+
+
+    register_exception_handlers(app)
+    register_routers(app, settings.api_prefix)
+
 
     return app
