@@ -53,5 +53,45 @@ class Database:
                         created_at TEXT NOT NULL,
                         FOREIGN KEY(user_uid) REFERENCES users(uid) ON DELETE CASCADE
                     );
+                    
+                    CREATE TABLE IF NOT EXISTS audit_logs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_uid TEXT NULL,
+                        username TEXT NULL,
+                        display_name TEXT NULL,
+                        role TEXT NULL,
+                        event_key TEXT NULL,
+                        enabled INTEGER NOT NULL DEFAULT 0,
+                        error_code TEXT NULL,
+                        error_detail TEXT NULL,
+                        error_meta TEXT NULL,
+                        tipo TEXT NOT NULL,
+                        info TEXT NOT NULL,
+                        method TEXT NOT NULL,
+                        path TEXT NOT NULL,
+                        query_params TEXT NULL,
+                        status_code INTEGER NOT NULL,
+                        client_ip TEXT NULL,
+                        duration_ms REAL NOT NULL,
+                        created_at TEXT NOT NULL
+                    );
+                    
+                    CREATE TABLE IF NOT EXISTS business_settings (
+                        id INTEGER PRIMARY KEY CHECK (id = 1),
+                        user_created INTEGER NOT NULL DEFAULT 1,
+                        user_deleted INTEGER NOT NULL DEFAULT 1,
+                        user_modified INTEGER NOT NULL DEFAULT 1,
+                        login INTEGER NOT NULL DEFAULT 1,
+                        logout INTEGER NOT NULL DEFAULT 1
+                    );
                 """
             )
+
+            conn.execute("""
+                INSERT INTO business_settings (
+                    id, user_created, user_deleted, user_modified,
+                    login, logout
+                )
+                SELECT ?, ?, ?, ?, ?, ?
+                WHERE NOT EXISTS (SELECT 1 FROM business_settings WHERE id = 1)
+            """, (1, 1, 1, 1, 1, 1,))

@@ -9,8 +9,11 @@ from dataclasses import dataclass
 
 from core.app.settings import AppSettings
 from core.database.database import Database
+from core.database.repositories.audit_log_repository import AuditLogRepository
+from core.database.repositories.business_settings_repository import BusinessSettingsRepository
 from core.database.repositories.refresh_token_repository import RefreshTokenRepository
 from core.database.repositories.user_repository import UserRepository
+from core.services.audit_service import AuditService
 from core.services.mdns_service import MDNSService
 from core.services.password_service import PasswordService
 from core.utils.security import TokenManager
@@ -25,3 +28,6 @@ class AppState:
     refresh_tokens: RefreshTokenRepository
     password_service: PasswordService
     token_manager: TokenManager
+    business_settings: BusinessSettingsRepository
+    audit_logs: AuditLogRepository
+    audit_service: AuditService

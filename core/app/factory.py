@@ -6,15 +6,19 @@ que otros modulos usan durante el ciclo de vida del backend.
 """
 
 from fastapi import FastAPI
+from pydantic_core.core_schema import dataclass_args_schema
 
 from core.app.lifecycle import app_lifespan
 from core.app.settings import AppSettings
 from core.app.state import AppState
 from core.database.bootstrap import bootstrap_admin_user
 from core.database.database import Database
+from core.database.repositories.audit_log_repository import AuditLogRepository
+from core.database.repositories.business_settings_repository import BusinessSettingsRepository
 from core.database.repositories.refresh_token_repository import RefreshTokenRepository
 from core.database.repositories.user_repository import UserRepository
 from core.errors.handlers import register_exception_handlers
+from core.services.audit_service import AuditService
 from core.services.mdns_service import MDNSService
 from core.services.password_service import PasswordService
 from core.utils.security import TokenManager
@@ -27,13 +31,19 @@ def create_app() -> FastAPI:
     database = Database(settings.database_path)
     database.initialize()
 
-    # Servicios
-    mdns_service = MDNSService()
-    password_service = PasswordService()
-
     # Repositorios
     users = UserRepository(database)
     refresh_tokens = RefreshTokenRepository(database)
+    business_settings = BusinessSettingsRepository(database)
+    audit_logs = AuditLogRepository(database)
+
+    # Servicios
+    mdns_service = MDNSService()
+    password_service = PasswordService()
+    audit_service = AuditService(
+        business_settings = business_settings,
+        audit_logs = audit_logs,
+    )
 
     # Utilidades
     token_manager = TokenManager(
@@ -56,7 +66,10 @@ def create_app() -> FastAPI:
         users = users,
         refresh_tokens = refresh_tokens,
         password_service = password_service,
-        token_manager = token_manager
+        token_manager = token_manager,
+        business_settings = business_settings,
+        audit_logs = audit_logs,
+        audit_service = audit_service,
     )
 
 
