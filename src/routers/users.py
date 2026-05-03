@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import Depends, Query, Request, Response, status, APIRouter
+from fastapi import Depends, Query, Request, Response, status
 
 from core.app.enums import UserRole
 from core.app.state import AppState
@@ -9,6 +9,7 @@ from core.errors.exceptions import ConflictError, NotFoundError
 from core.utils.audit import set_audit_context
 from src.dependencies.context import get_app_state, require_roles
 from src.schemas.user import UserCreate, UserRead, UserUpdate
+from src.routers.base import APIRouter
 
 router = APIRouter(prefix="/users", tags=["users"])
 

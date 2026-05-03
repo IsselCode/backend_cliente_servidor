@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import Depends, Request
 
 from core.app.state import AppState
 from core.auth.auth_context import AuthContext
 from core.errors.exceptions import AuthenticationError
 from core.utils.audit import set_audit_context
 from src.dependencies.context import get_app_state, get_current_auth_context
+from src.routers.base import APIRouter
 from src.schemas.auth import TokenResponse, LoginRequest, RefreshTokenRequest
 from src.schemas.user import UserRead
 

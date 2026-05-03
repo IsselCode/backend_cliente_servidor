@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from datetime import date
 
-from fastapi import Depends, Query, Request, APIRouter
+from fastapi import Depends, Query, Request
 from fastapi.exceptions import RequestValidationError
 
 from core.app.enums import UserRole
-from core.auth.auth_context import AuthContext
 from core.utils.audit import set_audit_context
 from src.dependencies.context import require_roles, get_app_state, get_current_auth_context
 from src.schemas.log import AuditLogRead
+from src.routers.base import APIRouter
 
 router = APIRouter(prefix="/logs", tags=["logs"])
 

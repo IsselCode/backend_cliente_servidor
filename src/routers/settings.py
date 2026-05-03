@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from fastapi import Depends, Request, APIRouter
+from fastapi import Depends, Request
 
 from core.app.enums import UserRole
-from core.auth.auth_context import AuthContext
 from core.utils.audit import set_audit_context
 from src.dependencies.context import require_roles, get_app_state
 from src.schemas.business_settings import BusinessSettingsRead, BusinessSettingsUpdate
+from src.routers.base import APIRouter
 
 router = APIRouter(prefix="/settings/general", tags=["settings"])
 
