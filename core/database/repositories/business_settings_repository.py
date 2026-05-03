@@ -17,7 +17,7 @@ class BusinessSettingsRepository:
                     user_deleted,
                     user_modified,
                     login,
-                    logout,
+                    logout
                 FROM business_settings
                 WHERE id = 1
                 """

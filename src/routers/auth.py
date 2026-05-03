@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
 from core.app.state import AppState
 from core.auth.auth_context import AuthContext
 from core.errors.exceptions import AuthenticationError
+from core.utils.audit import set_audit_context
 from src.dependencies.context import get_app_state, get_current_auth_context
 from src.schemas.auth import TokenResponse, LoginRequest, RefreshTokenRequest
 from src.schemas.user import UserRead
@@ -10,7 +11,7 @@ from src.schemas.user import UserRead
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, app_state: AppState = Depends(get_app_state)) -> TokenResponse:
+def login(request: Request, payload: LoginRequest, app_state: AppState = Depends(get_app_state)) -> TokenResponse:
     user = app_state.users.find_by_username(payload.username)
     if not user or not user["is_active"]:
         raise AuthenticationError("Invalid username or password")
@@ -31,6 +32,22 @@ def login(payload: LoginRequest, app_state: AppState = Depends(get_app_state)) -
     refresh_token, jti, expires_at = app_state.token_manager.create_refresh_token(uid=user["uid"])
     app_state.refresh_tokens.create(jti=jti, user_uid=user["uid"], token=refresh_token, expires_at=expires_at)
 
+
+    auth_context = AuthContext(
+        uid=user["uid"],
+        username=user["username"],
+        display_name=user["display_name"],
+        role=user["role"],
+    )
+
+    set_audit_context(
+        request,
+        event_key="login",
+        auth_context=auth_context,
+        tipo="auth",
+        info="Inicio de sesión"
+    )
+
     return TokenResponse(
         uid=user["uid"],
         username=user["username"],
@@ -43,7 +60,7 @@ def login(payload: LoginRequest, app_state: AppState = Depends(get_app_state)) -
 
 
 @router.post("/refresh", response_model=TokenResponse)
-def refresh_session(payload: RefreshTokenRequest, app_state: AppState=Depends(get_app_state)) -> TokenResponse:
+def refresh_session(request: Request, payload: RefreshTokenRequest, app_state: AppState=Depends(get_app_state)) -> TokenResponse:
     token_payload = app_state.token_manager.decode_refresh_token(payload.refresh_token)
     stored_token = app_state.refresh_tokens.find_active_by_token(payload.refresh_token)
     if not stored_token or stored_token["jti"] != token_payload["jti"] or stored_token["user_uid"] != token_payload["uid"]:
@@ -64,6 +81,19 @@ def refresh_session(payload: RefreshTokenRequest, app_state: AppState=Depends(ge
     refresh_token, new_jti, expires_at = app_state.token_manager.create_refresh_token(uid=user["uid"])
     app_state.refresh_tokens.create(jti=new_jti, user_uid=user["uid"], token=refresh_token, expires_at=expires_at)
 
+    auth_context = AuthContext(
+        uid=user["uid"],
+        username=user["username"],
+        display_name=user["display_name"],
+        role=user["role"],
+    )
+    set_audit_context(
+        request,
+        auth_context=auth_context,
+        tipo="auth",
+        info="Renovacion de sesion",
+    )
+
     return TokenResponse(
         uid=user["uid"],
         username=user["username"],
@@ -76,7 +106,12 @@ def refresh_session(payload: RefreshTokenRequest, app_state: AppState=Depends(ge
 
 
 @router.get("/me", response_model=UserRead)
-def me(auth_context: AuthContext = Depends(get_current_auth_context), app_state:AppState=Depends(get_app_state),) -> UserRead:
+def me(request: Request, auth_context: AuthContext = Depends(get_current_auth_context), app_state:AppState=Depends(get_app_state),) -> UserRead:
+    set_audit_context(
+        request,
+        tipo="auth",
+        info="Consulta de usuario autenticado",
+    )
     user = app_state.users.find_by_uid(auth_context.uid)
     return UserRead.model_validate(user)
 

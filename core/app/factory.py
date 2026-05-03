@@ -9,6 +9,7 @@ from fastapi import FastAPI
 from pydantic_core.core_schema import dataclass_args_schema
 
 from core.app.lifecycle import app_lifespan
+from core.app.middleware import AuditLogMiddleware
 from core.app.settings import AppSettings
 from core.app.state import AppState
 from core.database.bootstrap import bootstrap_admin_user
@@ -74,6 +75,7 @@ def create_app() -> FastAPI:
 
 
     register_exception_handlers(app)
+    app.add_middleware(AuditLogMiddleware)
     register_routers(app, settings.api_prefix)
 
 
