@@ -20,6 +20,7 @@ class AppSettings:
     app_port: int
     api_prefix: str
     database_path: Path
+    workspaces_dir: Path
     jwt_secret: str
     jwt_expiration_minutes: int
     bootstrap_admin_username: str
@@ -29,12 +30,16 @@ class AppSettings:
     def from_env(cls) -> "AppSettings":
         base_path = Path(__file__).resolve().parents[2]
         default_database_path = base_path / "app.db"
+        default_workspaces_dir = base_path / "workspaces"
+
+
 
         return cls(
             app_name=os.getenv("APP_NAME", "Backend cliente servidor"),
             app_port=int(os.getenv("APP_PORT", 8000)),
             api_prefix=os.getenv("API_PREFIX", "/api/v1"),
             database_path=Path(os.getenv("DATABASE_PATH", str(default_database_path))),
+            workspaces_dir=default_workspaces_dir,
             jwt_secret=os.getenv("JWT_SECRET", "prueba-llave-ultra-secreta"),
             jwt_expiration_minutes=int(os.getenv("JWT_EXPIRATION_MINUTES", 60)),
             bootstrap_admin_username=os.getenv("BOOTSTRAP_ADMIN_USERNAME", "admin"),

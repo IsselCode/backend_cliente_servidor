@@ -84,6 +84,13 @@ class Database:
                         login INTEGER NOT NULL DEFAULT 1,
                         logout INTEGER NOT NULL DEFAULT 1
                     );
+                        
+                    CREATE TABLE IF NOT EXISTS vision_workspace_dbs(
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        workspace_key TEXT NOT NULL UNIQUE,
+                        display_name TEXT NOT NULL,
+                        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    )
                 """
             )
 

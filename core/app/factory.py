@@ -18,6 +18,7 @@ from core.database.repositories.audit_log_repository import AuditLogRepository
 from core.database.repositories.business_settings_repository import BusinessSettingsRepository
 from core.database.repositories.refresh_token_repository import RefreshTokenRepository
 from core.database.repositories.user_repository import UserRepository
+from core.database.repositories.workspace_repository import WorkspaceRepository
 from core.errors.handlers import register_exception_handlers
 from core.services.audit_service import AuditService
 from core.services.mdns_service import MDNSService
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
     refresh_tokens = RefreshTokenRepository(database)
     business_settings = BusinessSettingsRepository(database)
     audit_logs = AuditLogRepository(database)
+    workspaces = WorkspaceRepository(database)
 
     # Servicios
     mdns_service = MDNSService()
@@ -71,6 +73,9 @@ def create_app() -> FastAPI:
         business_settings = business_settings,
         audit_logs = audit_logs,
         audit_service = audit_service,
+        workspaces = workspaces,
+        workspace_db = None,
+        active_workspace_key = None,
     )
 
 
