@@ -53,7 +53,6 @@ class WorkspaceRepository:
         self,
         workspace_key: str,
         *,
-        new_workspace_key: str | None = None,
         display_name: str | None = None,
     ) -> dict[str, Any] | None:
         current_workspace = self.find_by_workspace_key(workspace_key)
@@ -62,7 +61,6 @@ class WorkspaceRepository:
 
         payload = {
             "workspace_key": workspace_key,
-            "new_workspace_key": new_workspace_key if new_workspace_key is not None else current_workspace["workspace_key"],
             "display_name": display_name if display_name is not None else current_workspace["display_name"],
         }
 
@@ -70,14 +68,13 @@ class WorkspaceRepository:
             connection.execute(
                 """
                 UPDATE vision_workspace_dbs
-                SET workspace_key = :new_workspace_key,
-                    display_name = :display_name
+                SET display_name = :display_name
                 WHERE workspace_key = :workspace_key
                 """,
                 payload,
             )
 
-        return self.find_by_workspace_key(payload["new_workspace_key"])
+        return self.find_by_workspace_key(workspace_key)
 
     def delete_by_workspace_key(self, workspace_key: str) -> bool:
         with self.database.connection() as connection:

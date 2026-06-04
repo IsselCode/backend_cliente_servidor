@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import re
-import shutil
 import sqlite3
 import unicodedata
 from pathlib import Path
@@ -39,19 +38,6 @@ def _activate_workspace(app_state: AppState, workspace_key: str) -> None:
     workspace_db.initialize()
     app_state.workspace_db = workspace_db
     app_state.active_workspace_key = workspace_key
-
-
-def _rename_workspace_db(app_state: AppState, current_key: str, new_key: str) -> None:
-    source_path = _workspace_db_path(app_state, current_key)
-    target_path = _workspace_db_path(app_state, new_key)
-
-    if source_path == target_path or not source_path.exists():
-        return
-    if target_path.exists():
-        raise ConflictError("Workspace database file already exists")
-
-    target_path.parent.mkdir(parents=True, exist_ok=True)
-    shutil.move(str(source_path), str(target_path))
 
 
 def _delete_workspace_db(app_state: AppState, workspace_key: str) -> None:
@@ -129,15 +115,9 @@ def update_workspace(
     _=Depends(require_roles(UserRole.ADMIN)),
     app_state: AppState = Depends(get_app_state),
 ) -> WorkspaceRead:
-    current_workspace = app_state.workspaces.find_by_workspace_key(workspace_key)
-    if current_workspace is None:
-        raise NotFoundError("Workspace not found")
-
-    new_workspace_key = _normalize_workspace_key(payload.display_name)
     try:
         updated_workspace = app_state.workspaces.update_by_workspace_key(
             workspace_key,
-            new_workspace_key=new_workspace_key,
             display_name=payload.display_name,
         )
     except sqlite3.IntegrityError as exc:
@@ -145,22 +125,6 @@ def update_workspace(
 
     if updated_workspace is None:
         raise NotFoundError("Workspace not found")
-
-    try:
-        _rename_workspace_db(app_state, workspace_key, new_workspace_key)
-    except Exception:
-        try:
-            app_state.workspaces.update_by_workspace_key(
-                new_workspace_key,
-                new_workspace_key=workspace_key,
-                display_name=current_workspace["display_name"],
-            )
-        except sqlite3.IntegrityError as exc:
-            raise AppError("Workspace metadata rollback failed after database rename error") from exc
-        raise
-
-    if app_state.active_workspace_key == workspace_key:
-        _activate_workspace(app_state, new_workspace_key)
 
     set_audit_context(
         request,
