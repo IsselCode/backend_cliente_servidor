@@ -37,8 +37,7 @@ class WorkspaceDB:
                         config_plc TEXT NOT NULL,
                         external_scanner INTEGER NOT NULL DEFAULT 0,
                         ok_piece INTEGER NOT NULL DEFAULT 0,
-                        ng_piece INTEGER NOT NULL DEFAULT 0,
-                        trazability_route TEXT
+                        ng_piece INTEGER NOT NULL DEFAULT 0
                     );
                     
                     CREATE TABLE IF NOT EXISTS feature (

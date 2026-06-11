@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import shutil
 import sqlite3
 import unicodedata
 from pathlib import Path
@@ -30,20 +31,43 @@ def _normalize_workspace_key(display_name: str) -> str:
 
 
 def _workspace_db_path(app_state: AppState, workspace_key: str) -> Path:
-    return app_state.settings.workspaces_dir / f"{workspace_key}.db"
+    return _workspace_dir(app_state, workspace_key) / "workspace.db"
+
+
+def _workspace_dir(app_state: AppState, workspace_key: str) -> Path:
+    return app_state.settings.workspaces_dir / workspace_key
+
+
+def _trazability_root_dir(app_state: AppState) -> Path:
+    return app_state.settings.trazability_dir
+
+
+def _workspace_trazability_dir(app_state: AppState, workspace_key: str) -> Path:
+    return _trazability_root_dir(app_state) / workspace_key
+
+
+def _ensure_workspace_storage(app_state: AppState, workspace_key: str) -> None:
+    _workspace_dir(app_state, workspace_key).mkdir(parents=True, exist_ok=True)
+    _workspace_trazability_dir(app_state, workspace_key).mkdir(parents=True, exist_ok=True)
 
 
 def _activate_workspace(app_state: AppState, workspace_key: str) -> None:
+    _ensure_workspace_storage(app_state, workspace_key)
     workspace_db = WorkspaceDB(_workspace_db_path(app_state, workspace_key))
     workspace_db.initialize()
     app_state.workspace_db = workspace_db
     app_state.active_workspace_key = workspace_key
 
 
-def _delete_workspace_db(app_state: AppState, workspace_key: str) -> None:
-    workspace_db_path = _workspace_db_path(app_state, workspace_key)
-    if workspace_db_path.exists():
-        workspace_db_path.unlink()
+def _delete_workspace_storage(app_state: AppState, workspace_key: str) -> None:
+    for path in (
+        _workspace_dir(app_state, workspace_key),
+        _workspace_trazability_dir(app_state, workspace_key),
+    ):
+        if path.is_dir():
+            shutil.rmtree(path)
+        elif path.exists():
+            path.unlink()
 
 
 def _raise_workspace_conflict(exc: sqlite3.IntegrityError) -> None:
@@ -79,6 +103,7 @@ def create_workspace(
     except sqlite3.IntegrityError as exc:
         _raise_workspace_conflict(exc)
 
+    _ensure_workspace_storage(app_state, workspace_key)
     set_audit_context(
         request,
         tipo="workspaces",
@@ -149,7 +174,7 @@ def delete_workspace(
     if not deleted:
         raise NotFoundError("Workspace not found")
 
-    _delete_workspace_db(app_state, workspace_key)
+    _delete_workspace_storage(app_state, workspace_key)
     if app_state.active_workspace_key == workspace_key:
         app_state.workspace_db = None
         app_state.active_workspace_key = None
