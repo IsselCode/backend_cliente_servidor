@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import re
-import shutil
 import sqlite3
 import unicodedata
-from pathlib import Path
 
 from fastapi import Depends, Request, Response, status
 
 from core.app.enums import UserRole
 from core.app.state import AppState
-from core.database.workspace_db import WorkspaceDB
+from core.database.repositories.workspace_trazability_db_repository import WorkspaceTrazabilityDBRepository
+from core.database.workspace_storage import delete_workspace_storage, initialize_workspace_db
 from core.errors.exceptions import AppError, ConflictError, NotFoundError
 from core.utils.audit import set_audit_context
 from src.dependencies.context import get_app_state, require_roles
@@ -30,44 +29,13 @@ def _normalize_workspace_key(display_name: str) -> str:
     return workspace_key
 
 
-def _workspace_db_path(app_state: AppState, workspace_key: str) -> Path:
-    return _workspace_dir(app_state, workspace_key) / "workspace.db"
-
-
-def _workspace_dir(app_state: AppState, workspace_key: str) -> Path:
-    return app_state.settings.workspaces_dir / workspace_key
-
-
-def _trazability_root_dir(app_state: AppState) -> Path:
-    return app_state.settings.trazability_dir
-
-
-def _workspace_trazability_dir(app_state: AppState, workspace_key: str) -> Path:
-    return _trazability_root_dir(app_state) / workspace_key
-
-
-def _ensure_workspace_storage(app_state: AppState, workspace_key: str) -> None:
-    _workspace_dir(app_state, workspace_key).mkdir(parents=True, exist_ok=True)
-    _workspace_trazability_dir(app_state, workspace_key).mkdir(parents=True, exist_ok=True)
-
-
 def _activate_workspace(app_state: AppState, workspace_key: str) -> None:
-    _ensure_workspace_storage(app_state, workspace_key)
-    workspace_db = WorkspaceDB(_workspace_db_path(app_state, workspace_key))
-    workspace_db.initialize()
+    workspace_db = initialize_workspace_db(app_state.settings, workspace_key)
     app_state.workspace_db = workspace_db
+    app_state.workspace_trazability_dbs = WorkspaceTrazabilityDBRepository(workspace_db)
     app_state.active_workspace_key = workspace_key
-
-
-def _delete_workspace_storage(app_state: AppState, workspace_key: str) -> None:
-    for path in (
-        _workspace_dir(app_state, workspace_key),
-        _workspace_trazability_dir(app_state, workspace_key),
-    ):
-        if path.is_dir():
-            shutil.rmtree(path)
-        elif path.exists():
-            path.unlink()
+    app_state.active_trazability_db_date = None
+    app_state.active_trazability_db = None
 
 
 def _raise_workspace_conflict(exc: sqlite3.IntegrityError) -> None:
@@ -103,7 +71,7 @@ def create_workspace(
     except sqlite3.IntegrityError as exc:
         _raise_workspace_conflict(exc)
 
-    _ensure_workspace_storage(app_state, workspace_key)
+    initialize_workspace_db(app_state.settings, workspace_key)
     set_audit_context(
         request,
         tipo="workspaces",
@@ -174,10 +142,13 @@ def delete_workspace(
     if not deleted:
         raise NotFoundError("Workspace not found")
 
-    _delete_workspace_storage(app_state, workspace_key)
+    delete_workspace_storage(app_state.settings, workspace_key)
     if app_state.active_workspace_key == workspace_key:
         app_state.workspace_db = None
+        app_state.workspace_trazability_dbs = None
         app_state.active_workspace_key = None
+        app_state.active_trazability_db_date = None
+        app_state.active_trazability_db = None
 
     set_audit_context(
         request,

@@ -4,6 +4,7 @@ from src.routers.auth import router as auth_router
 from src.routers.users import router as users_router
 from src.routers.logs import router as logs_router
 from src.routers.settings import router as settings_router
+from src.routers.trazability import router as trazability_router
 from src.routers.workspaces import router as workspaces_router
 
 
@@ -13,5 +14,6 @@ def register_routers(app: FastAPI, api_prefix: str) -> None:
     api_router.include_router(users_router)
     api_router.include_router(logs_router)
     api_router.include_router(settings_router)
+    api_router.include_router(trazability_router)
     api_router.include_router(workspaces_router)
     app.include_router(api_router)

@@ -14,6 +14,8 @@ from core.database.repositories.business_settings_repository import BusinessSett
 from core.database.repositories.refresh_token_repository import RefreshTokenRepository
 from core.database.repositories.user_repository import UserRepository
 from core.database.repositories.workspace_repository import WorkspaceRepository
+from core.database.repositories.workspace_trazability_db_repository import WorkspaceTrazabilityDBRepository
+from core.database.trazability_db import TrazabilityDB
 from core.database.workspace_db import WorkspaceDB
 from core.services.audit_service import AuditService
 from core.services.mdns_service import MDNSService
@@ -35,4 +37,7 @@ class AppState:
     audit_service: AuditService
     workspaces: WorkspaceRepository
     workspace_db: WorkspaceDB | None
+    workspace_trazability_dbs: WorkspaceTrazabilityDBRepository | None
     active_workspace_key: str | None
+    active_trazability_db_date: str | None
+    active_trazability_db: TrazabilityDB | None

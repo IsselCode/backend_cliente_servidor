@@ -67,6 +67,14 @@ class WorkspaceDB:
                         FOREIGN KEY(feature_id) REFERENCES feature(id) ON DELETE CASCADE
                     );
 
+                    CREATE TABLE IF NOT EXISTS trazability_dbs (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        db_date TEXT NOT NULL UNIQUE,
+                        filename TEXT NOT NULL UNIQUE,
+                        relative_path TEXT NOT NULL UNIQUE,
+                        created_at TEXT NOT NULL
+                    );
+
                 """
             )
 

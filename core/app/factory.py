@@ -75,7 +75,10 @@ def create_app() -> FastAPI:
         audit_service = audit_service,
         workspaces = workspaces,
         workspace_db = None,
+        workspace_trazability_dbs = None,
         active_workspace_key = None,
+        active_trazability_db_date = None,
+        active_trazability_db = None,
     )
 
 
