@@ -10,6 +10,7 @@ from core.app.enums import UserRole
 from core.app.state import AppState
 from core.database.repositories.workspace_trazability_db_repository import WorkspaceTrazabilityDBRepository
 from core.database.workspace_storage import delete_workspace_storage, initialize_workspace_db
+from core.database.repositories.master_config_repository import MasterConfigRepository
 from core.errors.exceptions import AppError, ConflictError, NotFoundError
 from core.utils.audit import set_audit_context
 from src.dependencies.context import get_app_state, require_roles
@@ -36,6 +37,8 @@ def _activate_workspace(app_state: AppState, workspace_key: str) -> None:
     app_state.active_workspace_key = workspace_key
     app_state.active_trazability_db_date = None
     app_state.active_trazability_db = None
+    config = MasterConfigRepository(workspace_db).get()
+    app_state.plc_service.activate_workspace(workspace_key, config["config_plc"]["ip"])
 
 
 def _raise_workspace_conflict(exc: sqlite3.IntegrityError) -> None:
@@ -144,6 +147,7 @@ def delete_workspace(
 
     delete_workspace_storage(app_state.settings, workspace_key)
     if app_state.active_workspace_key == workspace_key:
+        app_state.plc_service.cerrar()
         app_state.workspace_db = None
         app_state.workspace_trazability_dbs = None
         app_state.active_workspace_key = None

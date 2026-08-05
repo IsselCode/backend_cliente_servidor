@@ -23,6 +23,8 @@ from core.errors.handlers import register_exception_handlers
 from core.services.audit_service import AuditService
 from core.services.mdns_service import MDNSService
 from core.services.password_service import PasswordService
+from core.services.plc_service import PLCService
+from core.drivers.plc_modbus_driver import PLCModbusDriver
 from core.utils.security import TokenManager
 from src.routers import register_routers
 
@@ -79,6 +81,7 @@ def create_app() -> FastAPI:
         active_workspace_key = None,
         active_trazability_db_date = None,
         active_trazability_db = None,
+        plc_service=PLCService(PLCModbusDriver()),
     )
 
 

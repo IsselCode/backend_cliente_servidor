@@ -21,4 +21,5 @@ async def app_lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
+        state.plc_service.cerrar()
         await state.mdns_service.stop()

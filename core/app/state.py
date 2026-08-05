@@ -20,6 +20,7 @@ from core.database.workspace_db import WorkspaceDB
 from core.services.audit_service import AuditService
 from core.services.mdns_service import MDNSService
 from core.services.password_service import PasswordService
+from core.services.plc_service import PLCService
 from core.utils.security import TokenManager
 
 
@@ -41,3 +42,4 @@ class AppState:
     active_workspace_key: str | None
     active_trazability_db_date: str | None
     active_trazability_db: TrazabilityDB | None
+    plc_service: PLCService
