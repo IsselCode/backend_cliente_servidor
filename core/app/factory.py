@@ -24,6 +24,7 @@ from core.services.audit_service import AuditService
 from core.services.mdns_service import MDNSService
 from core.services.password_service import PasswordService
 from core.services.plc_service import PLCService
+from core.services.plc_trigger_service import PLCTriggerMonitor
 from core.drivers.plc_modbus_driver import PLCModbusDriver
 from core.utils.security import TokenManager
 from src.routers import register_routers
@@ -45,6 +46,8 @@ def create_app() -> FastAPI:
     # Servicios
     mdns_service = MDNSService()
     password_service = PasswordService()
+    plc_service = PLCService(PLCModbusDriver())
+    plc_trigger_monitor = PLCTriggerMonitor(plc_service)
     audit_service = AuditService(
         business_settings = business_settings,
         audit_logs = audit_logs,
@@ -81,7 +84,8 @@ def create_app() -> FastAPI:
         active_workspace_key = None,
         active_trazability_db_date = None,
         active_trazability_db = None,
-        plc_service=PLCService(PLCModbusDriver()),
+        plc_service=plc_service,
+        plc_trigger_monitor=plc_trigger_monitor,
     )
 
 

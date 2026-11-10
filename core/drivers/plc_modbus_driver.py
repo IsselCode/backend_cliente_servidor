@@ -67,23 +67,28 @@ class PLCModbusDriver:
             except Exception:
                 return False
 
-    def read_discrete_input(self, index: int) -> bool:
+    def read_discrete_input(self, index: int) -> bool | None:
+        """Devuelve False/True para una lectura valida y None si falla.
+
+        Un error no equivale a una entrada baja: confundirlos puede fabricar
+        un flanco 0 -> 1 cuando se recupera la comunicacion.
+        """
         with self._lock:
             if self._cliente is None:
-                return False
+                return None
             try:
                 resp = self._cliente.read_discrete_inputs(index)
                 if resp is None:
-                    return False
+                    return None
                 if hasattr(resp, "isError") and resp.isError():
-                    return False
+                    return None
 
                 bits = getattr(resp, "bits", None)
                 if not bits or len(bits) < 1:
-                    return False
+                    return None
                 return bool(bits[0])
             except ConnectionException:
                 self.close()
-                return False
+                return None
             except Exception:
-                return False
+                return None

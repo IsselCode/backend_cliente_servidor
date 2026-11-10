@@ -71,7 +71,8 @@ class PLCService:
     def q4(self, accion: bool) -> bool:
         return self._driver.write_coil(self.Q4_ADDRESS, accion)
 
-    def leer_entrada_trigger(self) -> bool:
+    def leer_entrada_trigger(self) -> bool | None:
+        """False/True es el estado; None indica una lectura fallida."""
         return self._driver.read_discrete_input(self.TRIGGER_INPUT_INDEX)
 
     def apagar_todas_las_salidas(self) -> None:

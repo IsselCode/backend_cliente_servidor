@@ -1,10 +1,11 @@
 """
 Ciclo de vida de la aplicacion FastAPI.
 
-Define que debe ocurrir cuando el backend inicia y cuando se apaga; por ahora
-registra el servicio mDNS al arrancar y lo libera al finalizar.
+Registra mDNS al arrancar. Al finalizar detiene el monitor antes de cerrar
+el PLC y libera mDNS. El polling se activa explicitamente para la inferencia.
 """
 
+from asyncio import to_thread
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -21,5 +22,8 @@ async def app_lifespan(app: FastAPI) -> AsyncIterator[None]:
     try:
         yield
     finally:
-        state.plc_service.cerrar()
-        await state.mdns_service.stop()
+        try:
+            await to_thread(state.plc_trigger_monitor.stop)
+            await to_thread(state.plc_service.cerrar)
+        finally:
+            await state.mdns_service.stop()

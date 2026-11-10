@@ -21,6 +21,7 @@ from core.services.audit_service import AuditService
 from core.services.mdns_service import MDNSService
 from core.services.password_service import PasswordService
 from core.services.plc_service import PLCService
+from core.services.plc_trigger_service import PLCTriggerMonitor
 from core.utils.security import TokenManager
 
 
@@ -43,3 +44,4 @@ class AppState:
     active_trazability_db_date: str | None
     active_trazability_db: TrazabilityDB | None
     plc_service: PLCService
+    plc_trigger_monitor: PLCTriggerMonitor
