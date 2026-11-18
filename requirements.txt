@@ -10,7 +10,9 @@ python-dotenv==1.2.2
 starlette==1.4.1
 uvicorn==0.52.1
 zeroconf==0.150.0
-
-# Incorporadas en este commit
 numpy>=1.26,<3
 opencv-python>=4.8,<6
+
+# Incorporadas en este commit
+httpx2==2.16.2
+websockets>=15,<17

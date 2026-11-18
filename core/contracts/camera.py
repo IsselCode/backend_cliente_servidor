@@ -1,4 +1,4 @@
-"""Contratos compartidos de captura BGR."""
+"""Contratos compartidos de captura BGR y codificacion de frames."""
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -48,3 +48,12 @@ class CameraFrame:
     @property
     def height(self) -> int:
         return int(self.image_bgr.shape[0])
+
+
+@dataclass(frozen=True, slots=True)
+class EncodedFrame:
+    frame_id: str
+    captured_at: datetime
+    width: int
+    height: int
+    jpeg: bytes

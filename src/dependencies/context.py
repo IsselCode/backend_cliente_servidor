@@ -9,6 +9,15 @@ from core.errors.exceptions import AuthenticationError, AuthorizationError
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
+def authenticate_access_token(token: str, app_state: AppState) -> AuthContext:
+    """Validacion compartida por HTTP y WebSocket, incluida la cuenta activa."""
+    payload = app_state.token_manager.decode_access_token(token)
+    user = app_state.users.find_by_uid(payload["uid"])
+    if not user or not user["is_active"]:
+        raise AuthenticationError("User is inactive or does not exist")
+    return AuthContext.from_payload(payload)
+
+
 def get_app_state(request: Request) -> AppState:
     return request.app.state.container
 
@@ -23,12 +32,7 @@ def get_current_auth_context(
     if credentials.scheme.lower() != "bearer":
         raise AuthenticationError("Authorization scheme is invalid")
 
-    payload = app_state.token_manager.decode_access_token(credentials.credentials)
-    user = app_state.users.find_by_uid(payload["uid"])
-    if not user or not user["is_active"]:
-        raise AuthenticationError("User is inactive or does not exist")
-
-    auth_context = AuthContext.from_payload(payload)
+    auth_context = authenticate_access_token(credentials.credentials, app_state)
     request.state.auth_context = auth_context
     return auth_context
 

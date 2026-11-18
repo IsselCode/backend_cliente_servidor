@@ -6,6 +6,7 @@ variables de entorno con valores por defecto para desarrollo.
 """
 
 import os
+from math import isfinite
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -28,6 +29,16 @@ class AppSettings:
     webcam_index: int = 0
     camera_capture_fps: float = 30
     camera_stop_timeout: float = 5
+    stream_fps: float = 10
+    stream_jpeg_quality: int = 85
+    stream_send_timeout: float = 5
+    stream_auth_timeout: float = 10
+
+    def __post_init__(self) -> None:
+        for name in ("stream_send_timeout", "stream_auth_timeout"):
+            value = getattr(self, name)
+            if not isfinite(value) or value <= 0:
+                raise ValueError(f"{name} debe ser positivo y finito")
 
     @classmethod
     def from_env(cls) -> "AppSettings":
@@ -48,4 +59,8 @@ class AppSettings:
             webcam_index=int(os.getenv("WEBCAM_INDEX", "0")),
             camera_capture_fps=float(os.getenv("CAMERA_CAPTURE_FPS", "30")),
             camera_stop_timeout=float(os.getenv("CAMERA_STOP_TIMEOUT", "5")),
+            stream_fps=float(os.getenv("STREAM_FPS", "10")),
+            stream_jpeg_quality=int(os.getenv("STREAM_JPEG_QUALITY", "85")),
+            stream_send_timeout=float(os.getenv("STREAM_SEND_TIMEOUT", "5")),
+            stream_auth_timeout=float(os.getenv("STREAM_AUTH_TIMEOUT", "10")),
         )

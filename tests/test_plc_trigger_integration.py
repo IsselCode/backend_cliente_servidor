@@ -92,6 +92,10 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
             self.assertIsNot(current_thread(), main_thread)
             calls.append("plc.close")
 
+        async def close_stream():
+            self.assertIs(current_thread(), main_thread)
+            calls.append("stream.close")
+
         def close_camera():
             self.assertIsNot(current_thread(), main_thread)
             calls.append("camera.close")
@@ -101,13 +105,14 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
             settings=SimpleNamespace(app_port=8000),
             plc_trigger_monitor=SimpleNamespace(stop=stop),
             plc_service=SimpleNamespace(cerrar=close),
+            frame_stream_service=SimpleNamespace(close=close_stream),
             camera_service=SimpleNamespace(close=close_camera),
         )
         app = SimpleNamespace(state=SimpleNamespace(container=state))
         async with app_lifespan(app):
             self.assertEqual(calls, [])
             await asyncio.sleep(0)
-        self.assertEqual(calls, ["monitor.stop", "camera.close", "plc.close"])
+        self.assertEqual(calls, ["monitor.stop", "stream.close", "camera.close", "plc.close"])
         state.mdns_service.start.assert_awaited_once_with(8000)
         state.mdns_service.stop.assert_awaited_once_with()
 
@@ -117,6 +122,7 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
             settings=SimpleNamespace(app_port=8000),
             plc_trigger_monitor=Mock(),
             plc_service=SimpleNamespace(cerrar=Mock(side_effect=RuntimeError("fallo de cierre"))),
+            frame_stream_service=SimpleNamespace(close=AsyncMock()),
             camera_service=SimpleNamespace(close=Mock()),
         )
         app = SimpleNamespace(state=SimpleNamespace(container=state))
@@ -133,11 +139,13 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
             plc_trigger_monitor=SimpleNamespace(stop=Mock()),
             plc_service=SimpleNamespace(cerrar=Mock()),
             camera_service=SimpleNamespace(close=Mock(side_effect=RuntimeError("fallo de camara"))),
+            frame_stream_service=SimpleNamespace(close=AsyncMock()),
         )
         app = SimpleNamespace(state=SimpleNamespace(container=state))
         with self.assertRaisesRegex(RuntimeError, "fallo de camara"):
             async with app_lifespan(app):
                 pass
+        state.frame_stream_service.close.assert_awaited_once_with()
         state.plc_service.cerrar.assert_called_once_with()
         state.mdns_service.stop.assert_awaited_once_with()
 
@@ -148,11 +156,13 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
             plc_trigger_monitor=SimpleNamespace(stop=Mock(side_effect=RuntimeError("fallo de monitor"))),
             plc_service=SimpleNamespace(cerrar=Mock()),
             camera_service=SimpleNamespace(close=Mock()),
+            frame_stream_service=SimpleNamespace(close=AsyncMock()),
         )
         app = SimpleNamespace(state=SimpleNamespace(container=state))
         with self.assertRaisesRegex(RuntimeError, "fallo de monitor"):
             async with app_lifespan(app):
                 pass
+        state.frame_stream_service.close.assert_awaited_once_with()
         state.camera_service.close.assert_called_once_with()
         state.plc_service.cerrar.assert_called_once_with()
         state.mdns_service.stop.assert_awaited_once_with()
