@@ -11,4 +11,8 @@ app.db
 workspaces/
 
 /docs
+/examples
+/vision
+/tests
+/testers
 README.md

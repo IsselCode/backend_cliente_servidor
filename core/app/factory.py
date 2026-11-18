@@ -26,6 +26,8 @@ from core.services.password_service import PasswordService
 from core.services.plc_service import PLCService
 from core.services.plc_trigger_service import PLCTriggerMonitor
 from core.drivers.plc_modbus_driver import PLCModbusDriver
+from core.drivers.webcam_driver import WebcamDriver
+from core.services.camera_service import CameraService
 from core.utils.security import TokenManager
 from src.routers import register_routers
 
@@ -48,6 +50,11 @@ def create_app() -> FastAPI:
     password_service = PasswordService()
     plc_service = PLCService(PLCModbusDriver())
     plc_trigger_monitor = PLCTriggerMonitor(plc_service)
+    camera_service = CameraService(
+        WebcamDriver(settings.webcam_index),
+        capture_fps=settings.camera_capture_fps,
+        stop_timeout=settings.camera_stop_timeout,
+    )
     audit_service = AuditService(
         business_settings = business_settings,
         audit_logs = audit_logs,
@@ -86,6 +93,7 @@ def create_app() -> FastAPI:
         active_trazability_db = None,
         plc_service=plc_service,
         plc_trigger_monitor=plc_trigger_monitor,
+        camera_service=camera_service,
     )
 
 

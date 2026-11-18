@@ -25,6 +25,9 @@ class AppSettings:
     jwt_expiration_minutes: int
     bootstrap_admin_username: str
     bootstrap_admin_password: str
+    webcam_index: int = 0
+    camera_capture_fps: float = 30
+    camera_stop_timeout: float = 5
 
     @classmethod
     def from_env(cls) -> "AppSettings":
@@ -42,4 +45,7 @@ class AppSettings:
             jwt_expiration_minutes=int(os.getenv("JWT_EXPIRATION_MINUTES", 60)),
             bootstrap_admin_username=os.getenv("BOOTSTRAP_ADMIN_USERNAME", "admin"),
             bootstrap_admin_password=os.getenv("BOOTSTRAP_ADMIN_PASSWORD", "admin123"),
+            webcam_index=int(os.getenv("WEBCAM_INDEX", "0")),
+            camera_capture_fps=float(os.getenv("CAMERA_CAPTURE_FPS", "30")),
+            camera_stop_timeout=float(os.getenv("CAMERA_STOP_TIMEOUT", "5")),
         )

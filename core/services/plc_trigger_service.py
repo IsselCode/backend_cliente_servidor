@@ -4,18 +4,10 @@ import logging
 from collections.abc import Callable
 from math import isfinite
 from threading import Event, Lock, Thread, current_thread
-from typing import Protocol
+from core.contracts.plc import PLCTriggerSource
 
 
 logger = logging.getLogger(__name__)
-
-
-class PLCTriggerSource(Protocol):
-    """Contrato que ya cumple PLCService; permite usar dobles en las pruebas."""
-
-    def esta_conectado(self) -> bool: ...
-
-    def leer_entrada_trigger(self) -> bool | None: ...
 
 
 class PLCTriggerMonitor:

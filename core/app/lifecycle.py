@@ -1,8 +1,8 @@
 """
 Ciclo de vida de la aplicacion FastAPI.
 
-Registra mDNS al arrancar. Al finalizar detiene el monitor antes de cerrar
-el PLC y libera mDNS. El polling se activa explicitamente para la inferencia.
+Registra mDNS al arrancar. La webcam se abre bajo demanda. Al finalizar detiene
+el monitor, libera la webcam y el PLC, y cierra mDNS.
 """
 
 from asyncio import to_thread
@@ -24,6 +24,11 @@ async def app_lifespan(app: FastAPI) -> AsyncIterator[None]:
     finally:
         try:
             await to_thread(state.plc_trigger_monitor.stop)
-            await to_thread(state.plc_service.cerrar)
         finally:
-            await state.mdns_service.stop()
+            try:
+                await to_thread(state.camera_service.close)
+            finally:
+                try:
+                    await to_thread(state.plc_service.cerrar)
+                finally:
+                    await state.mdns_service.stop()
