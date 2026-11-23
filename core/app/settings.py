@@ -33,6 +33,9 @@ class AppSettings:
     stream_jpeg_quality: int = 85
     stream_send_timeout: float = 5
     stream_auth_timeout: float = 10
+    master_image_light_settle_time: float = 0.25
+    master_image_capture_timeout: float = 5
+    master_image_discard_frames: int = 2
 
     def __post_init__(self) -> None:
         for name in ("stream_send_timeout", "stream_auth_timeout"):
@@ -63,4 +66,7 @@ class AppSettings:
             stream_jpeg_quality=int(os.getenv("STREAM_JPEG_QUALITY", "85")),
             stream_send_timeout=float(os.getenv("STREAM_SEND_TIMEOUT", "5")),
             stream_auth_timeout=float(os.getenv("STREAM_AUTH_TIMEOUT", "10")),
+            master_image_light_settle_time=float(os.getenv("MASTER_IMAGE_LIGHT_SETTLE_TIME", "0.25")),
+            master_image_capture_timeout=float(os.getenv("MASTER_IMAGE_CAPTURE_TIMEOUT", "5")),
+            master_image_discard_frames=int(os.getenv("MASTER_IMAGE_DISCARD_FRAMES", "2")),
         )

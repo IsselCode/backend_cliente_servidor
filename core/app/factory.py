@@ -29,6 +29,7 @@ from core.drivers.plc_modbus_driver import PLCModbusDriver
 from core.drivers.webcam_driver import WebcamDriver
 from core.services.camera_service import CameraService
 from core.services.frame_stream_service import FrameStreamService
+from core.services.master_image_service import MasterImageService
 from core.utils.security import TokenManager
 from src.routers import register_routers
 
@@ -58,6 +59,12 @@ def create_app() -> FastAPI:
     )
     frame_stream_service = FrameStreamService(
         camera_service, fps=settings.stream_fps, jpeg_quality=settings.stream_jpeg_quality,
+    )
+    master_image_service = MasterImageService(
+        plc_service, camera_service,
+        light_settle_time=settings.master_image_light_settle_time,
+        capture_timeout=settings.master_image_capture_timeout,
+        discard_frames=settings.master_image_discard_frames,
     )
     audit_service = AuditService(
         business_settings = business_settings,
@@ -99,6 +106,7 @@ def create_app() -> FastAPI:
         plc_trigger_monitor=plc_trigger_monitor,
         camera_service=camera_service,
         frame_stream_service=frame_stream_service,
+        master_image_service=master_image_service,
     )
 
 

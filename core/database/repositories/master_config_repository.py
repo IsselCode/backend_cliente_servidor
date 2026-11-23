@@ -28,3 +28,12 @@ class MasterConfigRepository:
         with self.db.connection() as conn:
             conn.execute("UPDATE master_config SET ok_piece=0, ng_piece=0 WHERE id=1")
         return self.get()
+
+    def get_master_image(self) -> bytes | None:
+        with self.db.connection() as conn:
+            row = conn.execute("SELECT master_img FROM master_config WHERE id = 1").fetchone()
+        return row["master_img"]
+
+    def save_master_image(self, image_bytes: bytes) -> None:
+        with self.db.connection() as conn:
+            conn.execute("UPDATE master_config SET master_img = ? WHERE id = 1", (image_bytes,))

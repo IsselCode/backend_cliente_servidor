@@ -22,6 +22,7 @@ class _CaptureRun:
     stop: Event = field(default_factory=Event)
     thread: Thread | None = None
     latest: CameraFrame | None = None
+    latest_started_at: float = 0.0
     error: CameraError | None = None
     finished: bool = False
 
@@ -65,20 +66,30 @@ class CameraService:
                 run = self._run if not self._pending_captures else None
             self._stop_run(run)
 
-    def capture(self, *, after_frame_id: str | None = None, timeout: float = 2.0) -> CameraFrame:
+    def capture(
+        self, *, after_frame_id: str | None = None, timeout: float = 2.0,
+        not_before: float | None = None, discard_frames: int = 0,
+    ) -> CameraFrame:
         """Entrega un frame valido; si estaba detenida, espera una imagen nueva.
 
         Con la camara activa devuelve el ultimo frame, o espera uno posterior
         a after_frame_id. Sin captura continua libera el dispositivo al terminar
         la ultima captura individual, incluso si falla o vence su timeout.
+        not_before usa el reloj monotonic() y exige una lectura iniciada despues
+        de ese instante. discard_frames omite snapshots nuevos elegibles antes
+        de devolver uno; ambos criterios se aplican dentro del mismo plazo.
         """
         if not isfinite(timeout) or timeout <= 0:
             raise ValueError("timeout debe ser positivo y finito")
+        if not_before is not None and not isfinite(not_before):
+            raise ValueError("not_before debe ser finito")
+        if isinstance(discard_frames, bool) or not isinstance(discard_frames, int) or discard_frames < 0:
+            raise ValueError("discard_frames debe ser un entero no negativo")
         with self._lifecycle_lock, self._condition:
             run = self._start_run()
             self._pending_captures += 1
         try:
-            return self._wait_for_frame(run, after_frame_id, timeout)
+            return self._wait_for_frame(run, after_frame_id, timeout, not_before, discard_frames)
         finally:
             with self._lifecycle_lock:
                 with self._condition:
@@ -137,16 +148,27 @@ class CameraService:
         # Conserva el ultimo frame hasta el siguiente arranque. La nueva
         # ejecucion empieza sin snapshot para no entregar una imagen anterior.
 
-    def _wait_for_frame(self, run: _CaptureRun, after_frame_id: str | None, timeout: float) -> CameraFrame:
+    def _wait_for_frame(
+        self, run: _CaptureRun, after_frame_id: str | None, timeout: float,
+        not_before: float | None = None, discard_frames: int = 0,
+    ) -> CameraFrame:
         deadline = monotonic() + timeout
+        last_seen_id = None
         with self._condition:
             while True:
                 if self._closed or run.stop.is_set():
                     raise CameraClosedError("El servicio de camara esta cerrado")
                 if run.error is not None:
                     raise run.error
-                if run.latest is not None and run.latest.frame_id != after_frame_id:
-                    return run.latest
+                if (
+                    run.latest is not None and run.latest.frame_id != after_frame_id
+                    and (not_before is None or run.latest_started_at >= not_before)
+                    and run.latest.frame_id != last_seen_id
+                ):
+                    last_seen_id = run.latest.frame_id
+                    if discard_frames == 0:
+                        return run.latest
+                    discard_frames -= 1
                 if run.finished:
                     raise CameraError("La captura termino sin un frame disponible")
                 remaining = deadline - monotonic()
@@ -176,6 +198,7 @@ class CameraService:
                         break
                     self._sequence += 1
                     run.latest = CameraFrame(f"{self._identity}:{self._sequence}", captured_at, image)
+                    run.latest_started_at = started
                     self._condition.notify_all()
                 run.stop.wait(max(0, self._interval - (monotonic() - started)))
         except Exception as exc:

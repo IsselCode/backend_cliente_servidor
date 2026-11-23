@@ -24,6 +24,7 @@ from core.services.plc_service import PLCService
 from core.services.plc_trigger_service import PLCTriggerMonitor
 from core.services.camera_service import CameraService
 from core.services.frame_stream_service import FrameStreamService
+from core.services.master_image_service import MasterImageService
 from core.utils.security import TokenManager
 
 
@@ -49,3 +50,4 @@ class AppState:
     plc_trigger_monitor: PLCTriggerMonitor
     camera_service: CameraService
     frame_stream_service: FrameStreamService
+    master_image_service: MasterImageService

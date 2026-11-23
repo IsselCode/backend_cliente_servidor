@@ -1,15 +1,11 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
-class PLCConfig(BaseModel):
-    ip: str = Field(min_length=1)
-
-
-class WorkspaceConfigPatch(BaseModel):
-    config_plc: PLCConfig | None = None
-    external_scanner: bool | None = None
-    ok_piece: int | None = Field(default=None, ge=0)
-    ng_piece: int | None = Field(default=None, ge=0)
+class PLCStatus(BaseModel):
+    workspace_key: str
+    configured_ip: str
+    connected_ip: str | None
+    connected: bool
 
 
 class OutputWrite(BaseModel):
