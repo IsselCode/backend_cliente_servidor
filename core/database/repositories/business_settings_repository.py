@@ -17,7 +17,8 @@ class BusinessSettingsRepository:
                     user_deleted,
                     user_modified,
                     login,
-                    logout
+                    logout,
+                    camera_always_on
                 FROM business_settings
                 WHERE id = 1
                 """
@@ -33,6 +34,7 @@ class BusinessSettingsRepository:
             "user_modified",
             "login",
             "logout",
+            "camera_always_on",
         }
         updates = {key: value for key, value in fields.items() if key in allowed_fields}
         if not updates:

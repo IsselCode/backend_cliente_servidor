@@ -82,7 +82,8 @@ class Database:
                         user_deleted INTEGER NOT NULL DEFAULT 1,
                         user_modified INTEGER NOT NULL DEFAULT 1,
                         login INTEGER NOT NULL DEFAULT 1,
-                        logout INTEGER NOT NULL DEFAULT 1
+                        logout INTEGER NOT NULL DEFAULT 1,
+                        camera_always_on INTEGER NOT NULL DEFAULT 0
                     );
                         
                     CREATE TABLE IF NOT EXISTS vision_workspace_dbs(
@@ -93,6 +94,13 @@ class Database:
                     )
                 """
             )
+
+            conn.execute("BEGIN IMMEDIATE")
+            columns = conn.execute("PRAGMA table_info(business_settings)").fetchall()
+            if not any(column["name"] == "camera_always_on" for column in columns):
+                conn.execute(
+                    "ALTER TABLE business_settings ADD COLUMN camera_always_on INTEGER NOT NULL DEFAULT 0"
+                )
 
             conn.execute("""
                 INSERT INTO business_settings (

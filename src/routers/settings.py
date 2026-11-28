@@ -39,6 +39,10 @@ def update_business_settings(
         tipo="settings",
         info="Actualización de configuración general "
     )
-    updated = app_state.business_settings.update(**payload.model_dump(exclude_none=True))
+    changes = payload.model_dump(exclude_none=True)
+    with app_state.business_settings_lock:
+        updated = app_state.business_settings.update(**changes)
+        if "camera_always_on" in changes:
+            app_state.camera_service.set_keep_running(changes["camera_always_on"])
     updated.pop("id", None)
     return BusinessSettingsRead.model_validate(updated)

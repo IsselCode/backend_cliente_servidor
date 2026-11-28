@@ -9,6 +9,7 @@ class BusinessSettingsRead(BaseModel):
     user_modified: bool
     login: bool
     logout: bool
+    camera_always_on: bool
 
 
 class BusinessSettingsUpdate(BaseModel):
@@ -17,3 +18,4 @@ class BusinessSettingsUpdate(BaseModel):
     user_modified: bool | None = None
     login: bool | None = None
     logout: bool | None = None
+    camera_always_on: bool | None = None

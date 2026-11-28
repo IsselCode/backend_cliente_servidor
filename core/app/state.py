@@ -5,7 +5,8 @@ Reune configuracion y servicios ya creados para acceder a ellos desde FastAPI
 sin recrearlos en cada modulo.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from threading import Lock
 
 from core.app.settings import AppSettings
 from core.database.database import Database
@@ -51,3 +52,4 @@ class AppState:
     camera_service: CameraService
     frame_stream_service: FrameStreamService
     master_image_service: MasterImageService
+    business_settings_lock: Lock = field(default_factory=Lock)

@@ -1,7 +1,7 @@
 """
 Ciclo de vida de la aplicacion FastAPI.
 
-Registra mDNS al arrancar. La webcam se abre bajo demanda. Al finalizar detiene
+Registra mDNS al arrancar y aplica la configuración de la webcam. Al finalizar detiene
 el monitor y la transmision, libera la webcam y el PLC, y cierra mDNS.
 """
 
@@ -20,6 +20,8 @@ async def app_lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     await state.mdns_service.start(state.settings.app_port)
     try:
+        if state.business_settings.get()["camera_always_on"]:
+            await to_thread(state.camera_service.set_keep_running, True)
         yield
     finally:
         try:

@@ -46,6 +46,7 @@ class CameraService:
         self._lifecycle_lock = RLock()
         self._condition = Condition()
         self._continuous = False
+        self._keep_running = False
         self._pending_captures = 0
         self._run: _CaptureRun | None = None
         self._closed = False
@@ -63,7 +64,21 @@ class CameraService:
         with self._lifecycle_lock:
             with self._condition:
                 self._continuous = False
-                run = self._run if not self._pending_captures else None
+                run = self._run if not self._keep_running and not self._pending_captures else None
+            self._stop_run(run)
+
+    def set_keep_running(self, enabled: bool) -> None:
+        """Mantiene la webcam abierta independientemente de la vista previa."""
+        with self._lifecycle_lock:
+            with self._condition:
+                if enabled:
+                    self._start_run()
+                    self._keep_running = True
+                    return
+                if not self._keep_running:
+                    return
+                self._keep_running = False
+                run = self._run if not self._continuous and not self._pending_captures else None
             self._stop_run(run)
 
     def capture(
@@ -94,7 +109,10 @@ class CameraService:
             with self._lifecycle_lock:
                 with self._condition:
                     self._pending_captures -= 1
-                    stop = not self._closed and not self._continuous and not self._pending_captures
+                    stop = (
+                        not self._closed and not self._continuous
+                        and not self._keep_running and not self._pending_captures
+                    )
                 if stop:
                     self._stop_run(run)
 
